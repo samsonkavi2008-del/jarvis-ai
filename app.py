@@ -1,10 +1,10 @@
+import os
 from flask import Flask, request, jsonify, render_template_string
 from groq import Groq
 import datetime
 
 app = Flask(__name__)
-import os
-client = Groq(api_key=os.environ.get("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"))
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 HTML = """
 <!DOCTYPE html>

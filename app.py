@@ -3,7 +3,8 @@ from groq import Groq
 import datetime
 
 app = Flask(__name__)
-client = Groq(api_key="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")
+import os
+client = Groq(api_key=os.environ.get("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"))
 
 HTML = """
 <!DOCTYPE html>

@@ -18,8 +18,8 @@ HTML = """
         h1 { color: #00d4ff; font-size: 36px; margin-bottom: 5px; text-shadow: 0 0 20px #00d4ff; letter-spacing: 10px; }
         h3 { color: #0088ff; font-size: 14px; margin-bottom: 20px; letter-spacing: 5px; }
         #status { font-size: 14px; color: #0088ff; margin: 10px; min-height: 20px; }
-        #ring { width: 160px; height: 160px; border-radius: 50%; border: 3px solid #00d4ff; display: flex; align-items: center; justify-content: center; margin: 20px auto; box-shadow: 0 0 30px #00d4ff, inset 0 0 30px rgba(0,212,255,0.1); position: relative; cursor: pointer; }
-        #ring.listening { border-color: #ff4444; box-shadow: 0 0 40px #ff4444, inset 0 0 30px rgba(255,68,68,0.1); animation: pulse 1s infinite; }
+        #ring { width: 160px; height: 160px; border-radius: 50%; border: 3px solid #00d4ff; display: flex; align-items: center; justify-content: center; margin: 20px auto; box-shadow: 0 0 30px #00d4ff, inset 0 0 30px rgba(0,212,255,0.1); position: relative; cursor: pointer; transition: all 0.3s; }
+        #ring.listening { border-color: #ff4444; box-shadow: 0 0 40px #ff4444; animation: pulse 1s infinite; }
         #ring.thinking { border-color: #ffaa00; box-shadow: 0 0 40px #ffaa00; animation: spin 2s linear infinite; }
         #ring.speaking { border-color: #00ff88; box-shadow: 0 0 40px #00ff88; animation: pulse 0.5s infinite; }
         @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -41,15 +41,11 @@ HTML = """
     <h1>J.A.R.V.I.S</h1>
     <h3>JUST A RATHER VERY INTELLIGENT SYSTEM</h3>
     <p id="status">Initializing systems...</p>
-
     <div id="ring" onclick="startListening()">
         <button id="micBtn">🎤</button>
     </div>
-
     <button id="wakeBtn" onclick="toggleWake()">((•)) Say "Hey Jarvis"</button>
-
     <div id="result">All systems ready. How can I help you?</div>
-
     <div class="commands">
         <div class="cmd" onclick="sendCommand('open youtube')">📺 YouTube</div>
         <div class="cmd" onclick="sendCommand('open whatsapp')">💬 WhatsApp</div>
@@ -60,11 +56,9 @@ HTML = """
         <div class="cmd" onclick="sendCommand('what time is it')">🕐 Time</div>
         <div class="cmd" onclick="sendCommand('tell me a joke')">😄 Joke</div>
     </div>
-
     <div id="history"></div>
 
     <script>
-        // App packages for opening
         const appPackages = {
             'youtube': 'com.google.android.youtube',
             'whatsapp': 'com.whatsapp',
@@ -73,22 +67,15 @@ HTML = """
             'settings': 'com.android.settings',
             'instagram': 'com.instagram.android',
             'facebook': 'com.facebook.katana',
-            'twitter': 'com.twitter.android',
             'gmail': 'com.google.android.gm',
             'maps': 'com.google.android.apps.maps',
             'calculator': 'com.android.calculator2',
-            'clock': 'com.android.deskclock',
             'spotify': 'com.spotify.music',
             'telegram': 'org.telegram.messenger',
             'snapchat': 'com.snapchat.android',
-            'tiktok': 'com.zhiliaoapp.musically',
-            'netflix': 'com.netflix.mediaclient',
-            'phonepe': 'com.phonepe.app',
-            'gpay': 'com.google.android.apps.nbu.paisa.user',
-            'paytm': 'net.one97.paytm'
+            'netflix': 'com.netflix.mediaclient'
         };
 
-        // Request mic permission on load
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 stream.getTracks().forEach(t => t.stop());
@@ -114,7 +101,7 @@ HTML = """
             if (isListening || isSpeaking) return;
             isListening = true;
             setRingState('listening');
-            document.getElementById('status').innerText = '🎙️ Listening...';
+            document.getElementById('status').innerText = 'Listening...';
             recognition.start();
         }
 
@@ -138,49 +125,39 @@ HTML = """
         }
 
         function setRingState(state) {
-            const ring = document.getElementById('ring');
-            ring.className = state ? state : '';
+            document.getElementById('ring').className = state || '';
         }
 
         function processCommand(text) {
             const lower = text.toLowerCase();
-
-            // Open app commands
             for (const [app, pkg] of Object.entries(appPackages)) {
-                if (lower.includes('open ' + app) || lower.includes('launch ' + app) || lower.includes('start ' + app)) {
+                if (lower.includes('open ' + app) || lower.includes('launch ' + app)) {
                     openApp(app, pkg);
                     return;
                 }
             }
-
-            // Call command
             if (lower.includes('call ')) {
                 const name = text.replace(/call/i, '').trim();
                 handleCall(name);
                 return;
             }
-
-            // SMS command
-            if (lower.includes('send message') || lower.includes('send sms') || lower.includes('text ')) {
-                handleSMS(text);
+            if (lower.includes('send message') || lower.includes('text ')) {
+                window.location.href = 'sms:';
+                speak('Opening messages!');
                 return;
             }
-
-            // Search command
             if (lower.includes('search for') || lower.includes('google ')) {
                 const query = lower.replace('search for', '').replace('google', '').trim();
-                handleSearch(query);
+                speak('Searching for ' + query);
+                setTimeout(() => window.open('https://www.google.com/search?q=' + encodeURIComponent(query)), 1500);
                 return;
             }
-
-            // YouTube search
             if (lower.includes('play ') || lower.includes('youtube ')) {
                 const query = lower.replace('play', '').replace('youtube', '').trim();
-                handleYouTube(query);
+                speak('Playing ' + query + ' on YouTube!');
+                setTimeout(() => window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(query)), 1500);
                 return;
             }
-
-            // Default - Ask AI
             askAI(text);
         }
 
@@ -189,15 +166,8 @@ HTML = """
             showResult(msg);
             speak(msg);
             addHistory('ai', msg);
-
-            // Try to open using intent URL
-            const intentUrl = 'intent://#Intent;package=' + pkg + ';scheme=https;end';
-            window.location.href = intentUrl;
-
-            // Fallback to Play Store
-            setTimeout(() => {
-                window.location.href = 'market://details?id=' + pkg;
-            }, 2000);
+            window.location.href = 'intent://#Intent;package=' + pkg + ';scheme=https;end';
+            setTimeout(() => { window.location.href = 'market://details?id=' + pkg; }, 2000);
         }
 
         function handleCall(name) {
@@ -205,34 +175,7 @@ HTML = """
             showResult(msg);
             speak(msg);
             addHistory('ai', msg);
-            setTimeout(() => {
-                window.location.href = 'tel:' + name.replace(/\s/g, '');
-            }, 1500);
-        }
-
-        function handleSMS(text) {
-            const msg = 'Opening messages!';
-            showResult(msg);
-            speak(msg);
-            window.location.href = 'sms:';
-        }
-
-        function handleSearch(query) {
-            const msg = 'Searching for ' + query;
-            showResult(msg);
-            speak(msg);
-            setTimeout(() => {
-                window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank');
-            }, 1500);
-        }
-
-        function handleYouTube(query) {
-            const msg = 'Playing ' + query + ' on YouTube!';
-            showResult(msg);
-            speak(msg);
-            setTimeout(() => {
-                window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(query), '_blank');
-            }, 1500);
+            setTimeout(() => { window.location.href = 'tel:' + name.replace(/\s/g, ''); }, 1500);
         }
 
         function sendCommand(cmd) {
@@ -288,7 +231,7 @@ HTML = """
                 btn.className = 'active';
                 btn.innerText = '((•)) Listening for Hey Jarvis...';
                 startWakeWord();
-                speak('Hey! Jarvis is now active and listening!');
+                speak('Jarvis is now active!');
             } else {
                 btn.className = '';
                 btn.innerText = '((•)) Say "Hey Jarvis"';
@@ -309,9 +252,7 @@ HTML = """
                 }
             }
             wakeRec.onend = function() {
-                if (wakeActive && !isListening) {
-                    setTimeout(() => startWakeWord(), 500);
-                }
+                if (wakeActive && !isListening) setTimeout(() => startWakeWord(), 500);
             }
             try { wakeRec.start(); } catch(e) {}
         }
@@ -341,32 +282,25 @@ def ask():
     question = data.get('question', '')
     history = data.get('history', [])
     now = datetime.datetime.now().strftime("%I:%M %p, %B %d %Y")
-    
+
     messages = [{
         "role": "system",
-        "content": f"""You are JARVIS, an advanced AI assistant like Iron Man's JARVIS.
-Current time: {now}
-Be helpful, smart and concise. Max 50 words per answer.
-For weather: use wttr.in
-For calculations: solve directly
-For jokes: tell funny ones
-For news: give latest updates
-Always be professional but friendly."""
+        "content": f"You are JARVIS, an advanced AI assistant. Current time: {now}. Be helpful and concise. Max 50 words."
     }]
-    
+
     for h in history[-6:]:
         messages.append({
             "role": "user" if h['role'] == 'user' else "assistant",
             "content": h['text']
         })
     messages.append({"role": "user", "content": question})
-    
+
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=messages,
         max_tokens=150
     )
-    
+
     answer = response.choices[0].message.content
     return jsonify({"answer": answer})
 
